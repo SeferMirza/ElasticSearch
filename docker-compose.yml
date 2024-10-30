@@ -15,10 +15,22 @@ services:
     image: kibana:8.15.3
     ports:
       - 5601:5601
+    depends_on:
+      - elasticsearch
     environment:
       - ELASTICSEARCH_HOST=http://elasticsearch:9200
       - INTERACTIVESETUP_ENABLED=false
 
+  api:
+    build:
+      context: ./src/ElasticSearch.Api
+      dockerfile: Dockerfile
+    depends_on:
+      - elasticsearch
+    ports:
+      - 8080:8080
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+
 volumes:
   elasticsearch-data:
-    driver: data

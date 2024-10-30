@@ -17,6 +17,15 @@ public class Client
         _client.IndexAsync("api").GetAwaiter().GetResult();
     }
 
+    public async Task Ping(CancellationToken cancellationToken)
+    {
+        var pingResponse = await _client.PingAsync(cancellationToken);
+        if (!pingResponse.IsValidResponse)
+        {
+            throw new Exception("Elasticsearch connection failed");
+        }
+    }
+
     public async Task Add(Documentation documentation, CancellationToken cancellationToken)
     {
         CreateRequest<Documentation> createRequest = new(documentation.Id)
@@ -29,7 +38,7 @@ public class Client
 
     public async Task<IReadOnlyCollection<Documentation>> All(CancellationToken cancellationToken)
     {
-        var result = await _client.SearchAsync<Documentation>("api", cancellationToken);
+        var result = await _client.SearchAsync<Documentation>(s => s.Index("api"), cancellationToken: cancellationToken);
 
         return result.Documents;
     }
@@ -102,5 +111,11 @@ public class Client
         }
 
         return response.Documents;
+    }
+
+    public async Task Reset(CancellationToken cancellationToken)
+    {
+        await _client.Indices.DeleteAsync("api", cancellationToken);
+        await _client.Indices.CreateAsync("api", cancellationToken);
     }
 }
